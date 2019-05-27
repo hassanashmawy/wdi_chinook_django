@@ -1,0 +1,103 @@
+# 03 - Making Database Queries in Django
+# =========================================
+
+1) Find the albums recorded by the artist Queen.
+
+In [17]: queen_albums = Album.objects.filter(artist=Artist.objects.get(name='Queen'))                                                                                    
+
+In [18]: [qa.title for qa in queen_albums]                                                                                                                               
+Out[18]: ['Greatest Hits II', 'Greatest Hits I', 'News Of The World']
+
+2) Count how many tracks belong to the media type "Protected MPEG-4 video file".
+
+In [20]: mp4_tracks = Track.objects.filter(media_type=MediaType.objects.get(name='Protected MPEG-4 video file'))                                                         
+
+In [21]: [t.name for t in mp4_tracks]                                                                                                                                    
+Out[21]: 
+["There's No Place Like Home, Pt. 3",
+ 'The Gun On Ice Planet Zero, Pt. 1',
+ 'One of Them',
+ "There's No Place Like Home, Pt. 2",
+ 'Meet Kevin Johnson',
+ 'Confirmed Dead',
+....
+
+3) Find the genre with the name "Hip Hop/Rap".
+
+In [22]: hip_hop = Genre.objects.get(name='Hip Hop/Rap')                                                                                                                 
+
+In [23]: hip_hop                                                                                                                                                         
+Out[23]: <Genre: Genre object (17)>
+
+4) Count how many tracks belong to the "Hip Hop/Rap" genre
+
+In [26]: hiphop_tracks_count = Track.objects.filter(genre=hip_hop).count()                                                                                               
+
+In [27]: hiphop_tracks_count                                                                                                                                             
+Out[27]: 35
+
+5) Find the total amount of time required to listen to all the tracks in the database.
+
+In [29]: from django.db.models import Avg, Sum, Max, Min
+
+In [34]: Track.objects.aggregate(Sum('milliseconds'))['milliseconds__sum'] / (1000 * 60 )                                                                                
+Out[34]: 22965.710866666668
+
+6) Find the highest price of any track that has the media type "MPEG audio file".
+In [37]: mpg_highest_price = Track.objects.filter(media_type=MediaType.objects.get(name='MPEG audio file')).aggregate(Max('unit_price'))                                 
+
+In [38]: mpg_highest_price                                                                                                                                               
+Out[38]: {'unit_price__max': Decimal('0.99')}
+
+7) Find the name of the most expensive track that has the media type "MPEG audio file".
+
+mpg_highest_price = Track.objects.filter(media_type=MediaType.objects.get(name='MPEG audio file')).aggregate(Max('unit_price'))                                 
+
+Track.objects.values_list('name',flat=True).filter(unit_price=mpg_highest_price['unit_price__max'])
+
+8) Find the 2 oldest artists.
+ Artist.objects.order_by('created_at')     
+
+
+
+9) Find the least expensive track that has the genre "Electronica/Dance".
+Genre.objects.get(name='Electronica/Dance') 
+        <Genre: Genre object (15)>
+Track.objects.filter(genre=15).order_by('unit_price')  
+
+
+10) Find all "MPEG audio file" tracks in the genre "Electronica/Dance".
+    Track.objects.filter(media_type=1).filter(genre=15)   
+
+
+
+# =============
+# psql
+# =============
+
+1) Find the albums recorded by the artist Queen.
+select * from chinook_artist ar, chinook_album al where ar.id = al.artist_id and ar.name='Queen';
+
+
+2) Count how many tracks belong to the media type "Protected MPEG-4 video file".
+chinook=# select count(t.id) from chinook_track t, chinook_mediatype m where t.media_type_id = m.id;
+ count 
+-------
+  3498
+(1 row)
+
+
+3) Find the least expensive track that has the genre "Electronica/Dance".
+chinook=# select t.name , min(t.unit_price) from chinook_track t, chinook_genre g where g.id = t.genre_id and g.name = 'Electronica/Dance' group by t.name;
+
+
+4) Find the all the artists whose names start with A.
+
+chinook=# select * from chinook_artist where name like 'A%'
+
+
+
+5) Find all the tracks that belong to playlist 1.
+
+
+
